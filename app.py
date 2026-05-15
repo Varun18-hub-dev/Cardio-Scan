@@ -14,8 +14,8 @@ from models import db, User, PredictionRecord
 app = Flask(__name__, template_folder='templates')
 CORS(app)
 
-app.config['SECRET_KEY'] = 'dev-secret-key-123'
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db'
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev-secret-key-123')
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:///database.db')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db.init_app(app)
