@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard — CardioScan</title>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        .dashboard-container {
+            max-width: 1200px; margin: 0 auto; padding: 4rem 2rem; position: relative; z-index: 1;
+        }
+        .dashboard-header {
+            display: flex; justify-content: space-between; align-items: flex-end;
+            margin-bottom: 2rem; border-bottom: 1px solid var(--border); padding-bottom: 1rem;
+        }
+        .dashboard-header h1 {
+            font-family: var(--font-display); font-size: 2.2rem; color: var(--text-primary);
+        }
+        .history-table { width: 100%; border-collapse: collapse; background: var(--surface); border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow-sm); }
+        .history-table th, .history-table td { padding: 1rem 1.5rem; text-align: left; border-bottom: 1px solid var(--border); }
+        .history-table th { background: var(--surface-alt); font-size: .85rem; text-transform: uppercase; letter-spacing: .05em; color: var(--text-muted); }
+        .history-table tr:last-child td { border-bottom: none; }
+        .history-table td { font-size: .95rem; color: var(--text-body); }
+        .risk-badge { padding: .3rem .8rem; border-radius: 999px; font-size: .8rem; font-weight: 700; }
+        .risk-high { background: #fee2e2; color: var(--red); }
+        .risk-mod { background: #fef3c7; color: var(--amber); }
+        .risk-low { background: #dcfce7; color: var(--green); }
+        .empty-state { text-align: center; padding: 4rem 2rem; color: var(--text-muted); }
+    </style>
+</head>
+<body>
+    <div class="bg-orbs"><div class="orb orb-1"></div></div>
+
+    <header class="site-header">
+        <div class="header-inner">
+            <a href="/" class="logo">
+                <div class="logo-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M12 21.593c-5.63-5.539-11-10.297-11-14.402C1 3.518 4.08 2 6.5 2c1.988 0 4.024 1.226 5.5 3.22C13.476 3.226 15.512 2 17.5 2c2.42 0 5.5 1.518 5.5 5.191 0 4.105-5.37 8.863-11 14.402z" fill="currentColor"/></svg></div>
+                <span class="logo-text">CardioScan</span>
+            </a>
+            <nav class="main-nav">
+                <a href="/" class="nav-link">Home</a>
+                <a href="/history" class="nav-link active">Dashboard</a>
+            </nav>
+            <a href="/logout" class="nav-cta" style="background:var(--surface);color:var(--text-primary);border:1px solid var(--border);text-decoration:none;">Log Out</a>
+        </div>
+    </header>
+
+    <div class="dashboard-container">
+        <div class="dashboard-header">
+            <div>
+                <h1>Your History</h1>
+                <p>Welcome, {{ current_user.username }}! Here are your past predictions.</p>
+            </div>
+            <a href="/#upload" class="btn-primary" style="text-decoration:none;">New Prediction</a>
+        </div>
+
+        {% if records %}
+        <table class="history-table">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Risk Level</th>
+                    <th>Probability</th>
+                    <th>Key Indicators (BP / Chol / Heart Rate)</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for r in records %}
+                <tr>
+                    <td>{{ r.timestamp.strftime('%Y-%m-%d %H:%M') }}</td>
+                    <td>
+                        <span class="risk-badge 
+                            {% if 'High' in r.risk_label %}risk-high
+                            {% elif 'Moderate' in r.risk_label %}risk-mod
+                            {% else %}risk-low{% endif %}">
+                            {{ r.risk_label }}
+                        </span>
+                    </td>
+                    <td><b>{{ r.probability | round(1) }}%</b></td>
+                    <td>
+                        {% set inds = r.get_indicators() %}
+                        {% set bp = '' %}{% set chol = '' %}{% set hr = '' %}
+                        {% for i in inds %}
+                            {% if i.label == 'Resting BP' %}{% set bp = i.value %}{% endif %}
+                            {% if i.label == 'Cholesterol' %}{% set chol = i.value %}{% endif %}
+                            {% if i.label == 'Max Heart Rate' %}{% set hr = i.value %}{% endif %}
+                        {% endfor %}
+                        <span style="color:var(--text-muted);font-size:.85rem;">
+                            BP: {{ bp }} | Chol: {{ chol }} | HR: {{ hr }}
+                        </span>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div class="empty-state">
+            <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" style="color:var(--border); margin-bottom:1rem;">
+                <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
+                <polyline points="14 2 14 8 20 8"/>
+            </svg>
+            <p>You haven't uploaded any medical reports yet.</p>
+            <a href="/#upload" style="color:var(--accent); font-weight:600; margin-top:.5rem; display:inline-block;">Analyze your first report</a>
+        </div>
+        {% endif %}
+    </div>
+</body>
+</html>

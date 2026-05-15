@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login — CardioScan</title>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        .auth-container {
+            min-height: calc(100vh - 68px);
+            display: flex; align-items: center; justify-content: center;
+            padding: 4rem 2rem;
+        }
+        .auth-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow-lg);
+            padding: 3rem;
+            width: 100%; max-width: 420px;
+            text-align: center;
+            position: relative; z-index: 1;
+        }
+        .auth-title {
+            font-family: var(--font-display);
+            font-size: 2rem;
+            color: var(--text-primary);
+            margin-bottom: .5rem;
+        }
+        .auth-sub {
+            color: var(--text-muted); font-size: .9rem; margin-bottom: 2rem;
+        }
+        .form-group { text-align: left; margin-bottom: 1.25rem; }
+        .form-group label {
+            display: block; font-size: .85rem; font-weight: 600;
+            color: var(--text-primary); margin-bottom: .4rem;
+        }
+        .form-group input {
+            width: 100%; padding: .8rem 1rem;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            font-family: var(--font-body);
+            transition: border-color .15s;
+        }
+        .form-group input:focus {
+            outline: none; border-color: var(--accent);
+        }
+        .auth-btn { width: 100%; margin-top: 1rem; }
+        .auth-links { margin-top: 1.5rem; font-size: .85rem; color: var(--text-body); }
+        .auth-links a { color: var(--accent); font-weight: 600; }
+        .flash-msg {
+            background: #fee2e2; color: #dc2626; padding: .75rem;
+            border-radius: var(--radius-sm); font-size: .85rem; margin-bottom: 1.5rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-orbs">
+        <div class="orb orb-1"></div>
+        <div class="orb orb-2"></div>
+    </div>
+
+    <header class="site-header">
+        <div class="header-inner">
+            <a href="/" class="logo">
+                <div class="logo-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M12 21.593c-5.63-5.539-11-10.297-11-14.402C1 3.518 4.08 2 6.5 2c1.988 0 4.024 1.226 5.5 3.22C13.476 3.226 15.512 2 17.5 2c2.42 0 5.5 1.518 5.5 5.191 0 4.105-5.37 8.863-11 14.402z" fill="currentColor"/></svg></div>
+                <span class="logo-text">CardioScan</span>
+            </a>
+            <nav class="main-nav">
+                <a href="/" class="nav-link">Home</a>
+            </nav>
+            <a href="/register" class="nav-cta" style="text-decoration:none;">Create Account</a>
+        </div>
+    </header>
+
+    <div class="auth-container">
+        <div class="auth-card">
+            <h1 class="auth-title">Welcome Back</h1>
+            <p class="auth-sub">Log in to view your prediction history.</p>
+
+            {% with messages = get_flashed_messages(category_filter=["error"]) %}
+              {% if messages %}
+                <div class="flash-msg">{{ messages[0] }}</div>
+              {% endif %}
+            {% endwith %}
+
+            <form method="POST" action="/login">
+                <div class="form-group">
+                    <label for="email">Email Address</label>
+                    <input type="email" id="email" name="email" required>
+                </div>
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" name="password" required>
+                </div>
+                <button type="submit" class="btn-primary auth-btn">Log In</button>
+            </form>
+
+            <div class="auth-links">
+                Don't have an account? <a href="/register">Sign up</a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

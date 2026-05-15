@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CardioScan — Heart Disease Prediction</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+    <!-- Ambient background -->
+    <div class="bg-orbs">
+        <div class="orb orb-1"></div>
+        <div class="orb orb-2"></div>
+        <div class="orb orb-3"></div>
+    </div>
+
+    <!-- Navigation -->
+    <header class="site-header">
+        <div class="header-inner">
+            <a href="#" class="logo">
+                <div class="logo-icon">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+                        <path d="M12 21.593c-5.63-5.539-11-10.297-11-14.402C1 3.518 4.08 2 6.5 2c1.988 0 4.024 1.226 5.5 3.22C13.476 3.226 15.512 2 17.5 2c2.42 0 5.5 1.518 5.5 5.191 0 4.105-5.37 8.863-11 14.402z" fill="currentColor"/>
+                    </svg>
+                </div>
+                <span class="logo-text">CardioScan</span>
+            </a>
+            <nav class="main-nav">
+                <a href="#" class="nav-link active">Home</a>
+                <a href="#upload" class="nav-link">Predict</a>
+                <a href="#about" class="nav-link">About</a>
+                <a href="#footer" class="nav-link">Contact</a>
+                {% if current_user.is_authenticated %}
+                <a href="/history" class="nav-link" style="color:var(--accent); font-weight:700;">Dashboard</a>
+                {% endif %}
+            </nav>
+            {% if current_user.is_authenticated %}
+            <a href="/logout" class="nav-cta" style="text-decoration: none; display: inline-flex; align-items: center; justify-content: center; background:var(--surface); color:var(--text-primary); border:1px solid var(--border);">Log Out</a>
+            {% else %}
+            <a href="/login" class="nav-link" style="font-weight:600; margin-right: 10px;">Log In</a>
+            <a href="#upload" class="nav-cta" style="text-decoration: none; display: inline-flex; align-items: center; justify-content: center;">Get Started</a>
+            {% endif %}
+            <button class="mobile-menu-btn" aria-label="Menu">
+                <span></span><span></span><span></span>
+            </button>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-content">
+            <div class="hero-badge">
+                <span class="badge-dot"></span>
+                AI-Powered Cardiac Analysis
+            </div>
+            <h1 class="hero-title">
+                Know your heart's<br>
+                <em>risk profile</em> — early.
+            </h1>
+            <p class="hero-subtitle">
+                Upload your medical report and let our machine learning model analyze key cardiac indicators to predict heart disease risk with clinical-grade precision.
+            </p>
+            <div class="hero-actions">
+                <a href="#upload" class="btn-primary">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"/>
+                    </svg>
+                    Upload Your Report
+                </a>
+                <a href="/about" class="btn-ghost">How it works →</a>
+            </div>
+            <div class="hero-stats">
+                <div class="stat">
+                    <span class="stat-num">94.2%</span>
+                    <span class="stat-label">Model Accuracy</span>
+                </div>
+                <div class="stat-divider"></div>
+                <div class="stat">
+                    <span class="stat-num">13</span>
+                    <span class="stat-label">Clinical Indicators</span>
+                </div>
+                <div class="stat-divider"></div>
+                <div class="stat">
+                    <span class="stat-num">&lt;10s</span>
+                    <span class="stat-label">Analysis Time</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- ECG line decoration -->
+        <div class="ecg-container" aria-hidden="true">
+            <svg class="ecg-svg" viewBox="0 0 900 120" preserveAspectRatio="none">
+                <polyline class="ecg-line" points="
+                    0,60 60,60 75,60 80,20 85,100 90,60 110,60
+                    160,60 175,60 180,10 185,110 190,60 210,60
+                    260,60 275,60 280,15 285,105 290,60 310,60
+                    360,60 375,60 380,20 385,100 390,60 410,60
+                    460,60 475,60 480,12 485,108 490,60 510,60
+                    560,60 575,60 580,18 585,102 590,60 610,60
+                    660,60 675,60 680,20 685,100 690,60 710,60
+                    760,60 775,60 780,15 785,105 790,60 810,60
+                    860,60 875,60 880,20 885,100 890,60 900,60
+                "/>
+            </svg>
+        </div>
+    </section>
+
+    <!-- Upload Section -->
+    <section class="upload-section" id="upload">
+        <div class="section-inner">
+            <div class="section-header">
+                <span class="section-tag">Step 01</span>
+                <h2>Upload Your Report</h2>
+                <p>Our OCR engine extracts the relevant clinical parameters automatically from your medical report.</p>
+            </div>
+
+            <div class="upload-card">
+                <form action="/" method="POST" enctype="multipart/form-data" id="uploadForm">
+                    <div class="dropzone" id="dropzone">
+                        <input type="file" id="reportFile" name="report" accept=".pdf,.jpg,.jpeg,.png" hidden>
+                        <div class="dropzone-icon">
+                            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
+                                <polyline points="14 2 14 8 20 8"/>
+                                <line x1="12" y1="18" x2="12" y2="12"/>
+                                <line x1="9" y1="15" x2="15" y2="15"/>
+                            </svg>
+                        </div>
+                        <p class="dropzone-title">Drop your report here</p>
+                        <p class="dropzone-sub">Supports PDF, JPG, PNG — up to 10MB</p>
+                        <button type="button" class="dropzone-btn" id="browseBtn">Browse Files</button>
+
+                        <!-- File preview state (hidden by default) -->
+                        <div class="file-preview" id="filePreview" hidden>
+                            <div class="file-preview-icon">
+                                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                    <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
+                                    <polyline points="14 2 14 8 20 8"/>
+                                </svg>
+                            </div>
+                            <div class="file-preview-info">
+                                <span class="file-name" id="fileName"></span>
+                                <span class="file-size" id="fileSize"></span>
+                            </div>
+                            <button type="button" class="file-remove" id="removeFile" aria-label="Remove file">✕</button>
+                        </div>
+                    </div>
+
+                    {% set show_sample = True %}
+                    {% if current_user.is_authenticated and current_user.predictions|length > 0 %}
+                        {% set show_sample = False %}
+                    {% endif %}
+
+                    {% if show_sample %}
+                    <div style="text-align: center; margin-top: 1rem; font-size: 0.9rem;">
+                        <span style="color: var(--text-muted);">Don't have a medical report?</span> 
+                        <a href="{{ url_for('static', filename='sample_report.pdf') }}" download style="color: var(--accent); font-weight: 600; text-decoration: underline;">Download a sample to test</a>
+                    </div>
+                    {% endif %}
+
+                    <div class="form-footer">
+                        <div class="privacy-note">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                                <path d="M7 11V7a5 5 0 0110 0v4"/>
+                            </svg>
+                            Your data is processed securely and never stored.
+                        </div>
+                        <button type="submit" class="btn-primary btn-submit" id="submitBtn" disabled>
+                            <span class="btn-text">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                                </svg>
+                                Analyze Report
+                            </span>
+                            <span class="btn-loading" hidden>
+                                <span class="spinner"></span>
+                                Analyzing…
+                            </span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </section>
+
+    <!-- How it Works -->
+    <section class="how-section" id="about">
+        <div class="section-inner">
+            <div class="section-header">
+                <span class="section-tag">Process</span>
+                <h2>How it works</h2>
+            </div>
+            <div class="steps-grid">
+                <div class="step-card">
+                    <div class="step-num">01</div>
+                    <div class="step-icon">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"/>
+                        </svg>
+                    </div>
+                    <h3>Upload Report</h3>
+                    <p>Upload your cardiac medical report in PDF or image format.</p>
+                </div>
+                <div class="step-connector" aria-hidden="true">→</div>
+                <div class="step-card">
+                    <div class="step-num">02</div>
+                    <div class="step-icon">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/>
+                        </svg>
+                    </div>
+                    <h3>OCR Extraction</h3>
+                    <p>Our OCR engine reads and extracts clinical parameters automatically.</p>
+                </div>
+                <div class="step-connector" aria-hidden="true">→</div>
+                <div class="step-card">
+                    <div class="step-num">03</div>
+                    <div class="step-icon">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <path d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+                        </svg>
+                    </div>
+                    <h3>ML Prediction</h3>
+                    <p>Our trained model analyzes 13 cardiac indicators to predict risk level.</p>
+                </div>
+                <div class="step-connector" aria-hidden="true">→</div>
+                <div class="step-card">
+                    <div class="step-num">04</div>
+                    <div class="step-icon">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                        </svg>
+                    </div>
+                    <h3>View Results</h3>
+                    <p>Receive a detailed risk report with probability score and key indicators.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Result placeholder (shown after prediction) -->
+    <section class="result-section" id="resultSection" hidden>
+        <div class="section-inner">
+            <div class="result-card">
+                <div class="result-header">
+                    <span class="section-tag">Analysis Complete</span>
+                    <h2>Prediction Result</h2>
+                </div>
+                <div class="result-body">
+                    <!-- Risk gauge -->
+                    <div class="risk-gauge">
+                        <svg viewBox="0 0 200 110" class="gauge-svg">
+                            <defs>
+                                <linearGradient id="gaugeGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                                    <stop offset="0%" style="stop-color:#22c55e"/>
+                                    <stop offset="50%" style="stop-color:#f59e0b"/>
+                                    <stop offset="100%" style="stop-color:#ef4444"/>
+                                </linearGradient>
+                            </defs>
+                            <path d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="#e5e7eb" stroke-width="14" stroke-linecap="round"/>
+                            <path d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="url(#gaugeGrad)" stroke-width="14" stroke-linecap="round" stroke-dasharray="251" stroke-dashoffset="75" class="gauge-fill"/>
+                            <circle cx="100" cy="100" r="6" fill="var(--accent)" class="gauge-needle-pivot"/>
+                            <line x1="100" y1="100" x2="150" y2="48" stroke="var(--accent)" stroke-width="2.5" stroke-linecap="round" class="gauge-needle"/>
+                        </svg>
+                        <div class="gauge-label">
+                            <span class="risk-level" id="riskLevel">Moderate Risk</span>
+                            <span class="risk-pct" id="riskPct">62%</span>
+                        </div>
+                    </div>
+
+                    <!-- Key indicators -->
+                    <div class="indicators-grid" id="indicatorsGrid">
+                        <!-- Populated dynamically -->
+                    </div>
+
+                    <div class="result-disclaimer">
+                        ⚠️ This prediction is for informational purposes only. Please consult a cardiologist for clinical diagnosis.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="site-footer" id="footer">
+        <div class="footer-inner">
+            <div class="footer-brand">
+                <a href="/" class="logo">
+                    <div class="logo-icon">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M12 21.593c-5.63-5.539-11-10.297-11-14.402C1 3.518 4.08 2 6.5 2c1.988 0 4.024 1.226 5.5 3.22C13.476 3.226 15.512 2 17.5 2c2.42 0 5.5 1.518 5.5 5.191 0 4.105-5.37 8.863-11 14.402z"/>
+                        </svg>
+                    </div>
+                    <span class="logo-text">CardioScan</span>
+                </a>
+                <p>AI-powered cardiac risk prediction for early intervention.</p>
+            </div>
+            <div class="footer-links">
+                <div class="footer-col">
+                    <h4>Product</h4>
+                    <a href="#">How it works</a>
+                    <a href="#">Predict</a>
+                    <a href="#">Upload Report</a>
+                </div>
+                <div class="footer-col">
+                    <h4>Company</h4>
+                    <a href="#">About</a>
+                    <a href="#">Contact</a>
+                    <a href="#">Privacy Policy</a>
+                </div>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>© 2025 CardioScan. For educational and research use only. Not a substitute for professional medical advice.</p>
+        </div>
+    </footer>
+
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>
